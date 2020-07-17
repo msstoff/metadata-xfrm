@@ -6,20 +6,23 @@ suitable for loading into gephi for graphing.
 '''
 from collections import namedtuple
 import string
-import re
-from xml.etree.ElementTree import Element, SubElement, dump
+from xml.etree.ElementTree import ElementTree, Element, SubElement, dump, tostring
 
 # list to hold parsed records
 recList = []
-# named tuple to structue data
+
+# named tuple to structure data
 MetadataRecord = namedtuple('MetadataRecord', ['compId', 'compName', 'compType', 'refId', 'refName', 'refType'])
-# empty Element root
-root = Element("{http://www.gephi.org/gexf}gexf")
+
+# empty ElementTree
+tree = ElementTree()
+
 
 # get command line parameters e.g. file name
 datafile = '/Users/mstofferahn/Downloads/xref.txt'  # set a name for testing
+outFile = '/Users/mstofferahn/Downloads/xref.gexf'
 
-# parse fixed length record, create tuple, & write to list
+# parse line, create tuple, & write to list
 def parseLine(line) :
     splitLine = line.split()
     mRec = MetadataRecord(  
@@ -34,13 +37,16 @@ def parseLine(line) :
 
 
 # initialize output xml
-def initializeTree(root) :
-    graph = SubElement(root, "graph", type = "static")
-
-    attr = SubElement(graph, "attributes")
-    attr.attrib["class"] = "node"
-    attr.attrib["type"] = "static"
-    attrib = SubElement(attr, "attribute", id="label", title="label", type="string")
+def initializeTree(tree) :
+    root = Element("gexf")
+    root.set('xmlns', 'http://www.gexf.net/1.3')
+    root.set('version', '1.3')
+    root.set('xmlns:xsi','http://www.w3.org/2001/XMLSchema-instance')
+    root.set('xsi:schemaLocation','http://www.gexf.net/1.3 http://www.gexf.net/1.3/gexf.xsd')
+    tree._setroot(root)
+    graph = SubElement(root, "graph")
+    graph.set('defaultedgetype','directed')
+    graph.set('mode','static')
     return graph
 
 
@@ -72,12 +78,11 @@ with open(datafile ) as f:
             parseLine(line)
 f.close()
 
-graph = initializeTree(root)
+graph = initializeTree(tree)
 
 createNodes(recList, graph)
 
 createEdges(recList, graph)
 
 # write out xml
-
-dump(root)
+tree.write(outFile, encoding='UTF-8', xml_declaration=True)
