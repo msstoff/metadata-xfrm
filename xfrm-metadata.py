@@ -6,6 +6,7 @@ suitable for loading into gephi for graphing.
 '''
 from collections import namedtuple
 import string
+import re
 from xml.etree.ElementTree import Element, SubElement, dump
 
 # list to hold parsed records
@@ -16,18 +17,19 @@ MetadataRecord = namedtuple('MetadataRecord', ['compId', 'compName', 'compType',
 root = Element("{http://www.gephi.org/gexf}gexf")
 
 # get command line parameters e.g. file name
-datafile = './apex.txt'  # set a name for testing
+datafile = '/Users/mstofferahn/Downloads/xref.txt'  # set a name for testing
 
 # parse fixed length record, create tuple, & write to list
 def parseLine(line) :
+    splitLine = line.split()
     mRec = MetadataRecord(  
-                            compId = line[0:18],
-                            compName = line[21:54].strip(),
-                            compType = line[56:77].strip(),
-                            refId = line[79:97],
-                            refName = line[103:134].strip(),
-                            refType = line[136:158].strip()
-                        )
+        compId=splitLine[0],
+        compName=splitLine[1],
+        compType=splitLine[2],
+        refId=splitLine[3],
+        refName=splitLine[4],
+        refType=splitLine[5]
+        )
     recList.append(mRec)
 
 

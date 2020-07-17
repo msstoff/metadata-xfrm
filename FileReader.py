@@ -12,12 +12,11 @@ with open(datafile ) as f:
     header=f.readline()
     separator=f.readline()
     for line in f:
-        compId=line[0:18]
-        compName=line[21:54].strip()
-        compType=line[56:77].strip()
-        refId=line[79:97]
-        refName=line[103:134].strip()
-        refType=line[136:158].strip()
+        splitLine = line.split()
+        compId=splitLine[0]
+        compName=splitLine[1]
+        compType=splitLine[2]
+        refId=splitLine[3]
+        refName=splitLine[4]
+        refType=splitLine[5]
         print('node: ', compId, compName, compType, refId, refName, refType)
-
-
