@@ -2,9 +2,14 @@
 
 # writes a simple xml file 
 
-from xml.etree.ElementTree import Element, SubElement, dump
+from xml.etree.ElementTree import ElementTree, Element, SubElement, dump, tostring
 
-root = Element("{http://www.gephi.org/gexf}gexf")
+root = Element("gexf")
+root.set('xmlns', 'http://www.gexf.net/1.3')
+root.set('version', '1.3')
+root.set('xmlns:xsi','http://www.w3.org/2001/XMLSchema-instance')
+root.set('xsi:schemaLocation','http://www.gexf.net/1.3 http://www.gexf.net/1.3/gexf.xsd')
+
 graph = SubElement(root, "graph", type = "static")
 
 '''
@@ -25,4 +30,5 @@ aNode = SubElement(nodes, "node", id="1234", label="abcd")
 edges = SubElement(graph, "edges")
 anEdge = SubElement(edges, "edge", id="1234", source="1234", target="5678")
 
-dump(root)
+
+print(tostring(root))
