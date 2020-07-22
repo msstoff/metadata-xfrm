@@ -4,9 +4,11 @@
 This script transforms the output from a metadata dependency query into gefx -
 suitable for loading into gephi for graphing.
 '''
-from collections import namedtuple
+from collections 
+import namedtuple
 import string
 from xml.etree.ElementTree import ElementTree, Element, SubElement, dump, tostring
+import argparse
 
 # list to hold parsed records
 recList = []
@@ -17,12 +19,22 @@ MetadataRecord = namedtuple('MetadataRecord', ['compId', 'compName', 'compType',
 # empty ElementTree
 tree = ElementTree()
 
+# set default file names for testing
+datafile = './apex.txt' 
+gexfFile = './apex.gexf'
 
-# get command line parameters e.g. file name
-datafile = '/Users/mstofferahn/Downloads/xref.txt'  # set a name for testing
-outFile = '/Users/mstofferahn/Downloads/xref.gexf'
+# parse command line arguments
+def parseArgs() :
+    parser = argparse.ArgumentParser(description='Transforms a metadata query file into gexf output for graphing.')
+    parser.add_argument( 'infile', help='The metadata file to be read')
+    parser.add_argument('outfile', help="The transformed gexf file")
+    parser.add_argument('-t', '--tests', help='Include test classes', action='store_true')
+    args = parser.parse_args()
+    return args
 
 # parse line, create tuple, & write to list
+# TODO: check for test flag
+# TODO: check line for 'Test' in compName or refName
 def parseLine(line) :
     splitLine = line.split()
     mRec = MetadataRecord(  
@@ -68,6 +80,11 @@ def createEdges(recList, graph) :
 '''
 Main execution
 '''
+args = parseArgs()
+datafile = args.infile
+gexfFile = args.outfile
+print('datafile: ', datafile)
+print('gexfFile: ', gexfFile)
 
 # check the file exists & open
 with open(datafile ) as f:
@@ -85,4 +102,4 @@ createNodes(recList, graph)
 createEdges(recList, graph)
 
 # write out xml
-tree.write(outFile, encoding='UTF-8', xml_declaration=True)
+tree.write(gexfFile, encoding='UTF-8', xml_declaration=True)
