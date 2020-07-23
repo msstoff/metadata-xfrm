@@ -4,8 +4,7 @@
 This script transforms the output from a metadata dependency query into gefx -
 suitable for loading into gephi for graphing.
 '''
-from collections 
-import namedtuple
+from collections import namedtuple
 import string
 from xml.etree.ElementTree import ElementTree, Element, SubElement, dump, tostring
 import argparse
@@ -13,15 +12,14 @@ import argparse
 # list to hold parsed records
 recList = []
 
+# dictionary to store nodes
+nodeDict = {}
+
 # named tuple to structure data
 MetadataRecord = namedtuple('MetadataRecord', ['compId', 'compName', 'compType', 'refId', 'refName', 'refType'])
 
 # empty ElementTree
 tree = ElementTree()
-
-# set default file names for testing
-datafile = './apex.txt' 
-gexfFile = './apex.gexf'
 
 # parse command line arguments
 def parseArgs() :
@@ -33,8 +31,6 @@ def parseArgs() :
     return args
 
 # parse line, create tuple, & write to list
-# TODO: check for test flag
-# TODO: check line for 'Test' in compName or refName
 def parseLine(line) :
     splitLine = line.split()
     mRec = MetadataRecord(  
@@ -46,6 +42,12 @@ def parseLine(line) :
         refType=splitLine[5]
         )
     recList.append(mRec)
+    if mRec.compId not in nodeDict:
+        if args.tests:
+            nodeDict[mRec.compId] = mRec.compName
+        else:
+            if 'Test' not in mRec.compName:
+                nodeDict[mRec.compId] = mRec.compName
 
 
 # initialize output xml
@@ -62,18 +64,24 @@ def initializeTree(tree) :
     return graph
 
 
-#  iterate list & write nodes
-def createNodes(recList, graph) :
+#  iterate list & write nodes using the dictionary
+def createNodes(graph) :
     nodes = SubElement(graph, "nodes")
-    for rec in recList:
-        aNode = SubElement(nodes, "node", id=rec.compId, label=rec.compName)
+    for compId, compName in nodeDict.items() :
+        aNode = SubElement(nodes, "node", id=compId, label=compName)
+    print('Created nodes: ', len(nodeDict))
 
 #  iterate list & write edges
-def createEdges(recList, graph) :
+def createEdges(graph) :
     edges = SubElement(graph, "edges")
+    edgeCount = 0
     for rec in recList:
-        idx = rec.compId[-8:] + rec.refId[-8:]
-        anEdge = SubElement(edges, "edge", id=idx, source=rec.compId, target=rec.refId)
+        # filter edges if both endpoints are not in nodeDict
+        if (rec.compId in nodeDict) and (rec.refId in nodeDict):
+            edgeCount += 1
+            idx = rec.compId[-8:] + rec.refId[-8:]
+            anEdge = SubElement(edges, "edge", id=idx, source=rec.compId, target=rec.refId)
+    print('Created edges: ', edgeCount)
 
 
 
@@ -83,23 +91,24 @@ Main execution
 args = parseArgs()
 datafile = args.infile
 gexfFile = args.outfile
-print('datafile: ', datafile)
-print('gexfFile: ', gexfFile)
 
 # check the file exists & open
 with open(datafile ) as f:
     header=f.readline()
     separator=f.readline()
+    recCount = 0
     for line in f:
         if not line.startswith('Total'):
+            recCount += 1
             parseLine(line)
 f.close()
 
+print('Input lines read: ', recCount)
+
 graph = initializeTree(tree)
 
-createNodes(recList, graph)
-
-createEdges(recList, graph)
+createNodes(graph)
+createEdges(graph)
 
 # write out xml
 tree.write(gexfFile, encoding='UTF-8', xml_declaration=True)
